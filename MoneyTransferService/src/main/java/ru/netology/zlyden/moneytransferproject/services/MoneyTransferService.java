@@ -16,38 +16,38 @@ import java.util.UUID;
 public class MoneyTransferService {
     private final CardValidator сardValidator;
     private final AmountValidator amountValidator;
-    private final MyLogger myLogger;
+    private final MoneyTransferServiceLogger moneyTransferServiceLogger;
 
     @Autowired
-    public MoneyTransferService(CardValidator сardValidator, AmountValidator amountValidator, MyLogger myLogger) {
+    public MoneyTransferService(CardValidator сardValidator, AmountValidator amountValidator, MoneyTransferServiceLogger moneyTransferServiceLogger) {
         this.сardValidator = сardValidator;
         this.amountValidator = amountValidator;
-        this.myLogger = myLogger;
+        this.moneyTransferServiceLogger = moneyTransferServiceLogger;
     }
 
-    public GoodResponse getResponse(MoneyTransfer moneyTransfer) {
+    public GoodResponse transferHandler(MoneyTransfer moneyTransfer) {
         //сначала гоним проверки и швыряемся исключениями в случае неудачи
         if (!сardValidator.checkCardNumber(moneyTransfer.getCardFromNumber())) {
-            throw new Exception400("Invalid cardFrom number: " + moneyTransfer.getCardFromNumber());
+            throw new ParametersValidationException("Invalid cardFrom number: " + moneyTransfer.getCardFromNumber());
         }
         if (!сardValidator.checkCardNumber(moneyTransfer.getCardToNumber())) {
-            throw new Exception400("Invalid cardTo number: " + moneyTransfer.getCardToNumber());
+            throw new ParametersValidationException("Invalid cardTo number: " + moneyTransfer.getCardToNumber());
         }
         if (moneyTransfer.getCardFromNumber().equals(moneyTransfer.getCardToNumber())){
-            throw new Exception400("Invalid operation: cardTo " + moneyTransfer.getCardToNumber() +
+            throw new ParametersValidationException("Invalid operation: cardTo " + moneyTransfer.getCardToNumber() +
                     " equals cardFrom " + moneyTransfer.getCardFromNumber());
         }
         if (!сardValidator.checkValidTill(moneyTransfer.getCardFromValidTill())) {
-            throw new Exception400("Invalid cardFromValidTill: " + moneyTransfer.getCardFromValidTill());
+            throw new ParametersValidationException("Invalid cardFromValidTill: " + moneyTransfer.getCardFromValidTill());
         }
         if (!сardValidator.checkCVV(moneyTransfer.getCardFromCVV())) {
-            throw new Exception400("Invalid cardFromCVV: " + moneyTransfer.getCardFromCVV());
+            throw new ParametersValidationException("Invalid cardFromCVV: " + moneyTransfer.getCardFromCVV());
         }
         if (!amountValidator.checkCurrency(moneyTransfer.getAmount().getCurrency())) {
-            throw new Exception400("Invalid amount - currency: " + moneyTransfer.getAmount().getCurrency());
+            throw new ParametersValidationException("Invalid amount - currency: " + moneyTransfer.getAmount().getCurrency());
         }
         if (!amountValidator.checkValue(moneyTransfer.getAmount().getValue())) {
-            throw new Exception400("Invalid amount - value: " + moneyTransfer.getAmount().getValue());
+            throw new ParametersValidationException("Invalid amount - value: " + moneyTransfer.getAmount().getValue());
         }
         //затем бизнес-логика
         //имитация запроса к банку - с вероятностью 1:5 отказ/успех
@@ -55,7 +55,7 @@ public class MoneyTransferService {
         int rnd = random.nextInt(0, 5);
         if (rnd == 0) {
             //отказ
-            throw new Exception500("Money transfer failed: " + moneyTransfer.toString());
+            throw new ExternalServiceException("Money transfer failed: " + moneyTransfer.toString());
         } else {
             //успех
             UUID uuid = UUID.randomUUID();
@@ -64,7 +64,7 @@ public class MoneyTransferService {
             sb.append("RESPONSE: ");
             sb.append(HttpStatus.OK.toString() + " ");
             sb.append(goodResponse.toString());
-            myLogger.log(sb.toString());
+            moneyTransferServiceLogger.log(sb.toString());
             return goodResponse;
         }
     }

@@ -7,10 +7,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import ru.netology.zlyden.moneytransferproject.exceptions.Exception400;
-import ru.netology.zlyden.moneytransferproject.exceptions.Exception500;
+import ru.netology.zlyden.moneytransferproject.exceptions.ParametersValidationException;
+import ru.netology.zlyden.moneytransferproject.exceptions.ExternalServiceException;
 import ru.netology.zlyden.moneytransferproject.models.Amount;
-import ru.netology.zlyden.moneytransferproject.models.ConfirmOperation;
 import ru.netology.zlyden.moneytransferproject.models.GoodResponse;
 import ru.netology.zlyden.moneytransferproject.models.MoneyTransfer;
 import ru.netology.zlyden.moneytransferproject.validators.AmountValidator;
@@ -19,7 +18,7 @@ import ru.netology.zlyden.moneytransferproject.validators.CardValidator;
 public class MoneyTransferServiceTest {
     MoneyTransfer moneyTransfer;
     @Mock
-    MyLogger mockMyLogger;
+    MoneyTransferServiceLogger mockMoneyTransferServiceLogger;
     @Mock
     CardValidator cardValidator;
     @Mock
@@ -40,7 +39,7 @@ public class MoneyTransferServiceTest {
     }
 
     @Test
-    public void getResponseTestException400() {
+    public void transferHandlerTestException400() {
         //arrange
 
         //заглушки возвращают false на все методы (хотя достаточно одного false с любого метода)
@@ -56,13 +55,13 @@ public class MoneyTransferServiceTest {
                 .thenReturn(false);
 
         //act + assert
-        Assertions.assertThrows(Exception400.class, () -> {
-            moneyTransferService.getResponse(moneyTransfer);
+        Assertions.assertThrows(ParametersValidationException.class, () -> {
+            moneyTransferService.transferHandler(moneyTransfer);
         });
     }
 
     @Test
-    public void getResponseTestException500() {
+    public void transferHandlerTestException500() {
         //arrange
 
         //Заглушки возвращают true на все методы
@@ -82,22 +81,22 @@ public class MoneyTransferServiceTest {
         //логика метода с вероятностью 1:5 должна выбрасывать исключение,
         // поэтому за 10 вызовов скорее всего оно хоть один раз да выбросится
         //если выбросится раньше - выходим из цикла
-        boolean isExceprion500 = false;
+        boolean isExternalServiceException = false;
         for (int i = 0; i < 10; i++) {
             try {
-                moneyTransferService.getResponse(moneyTransfer);
-            } catch (Exception500 e) {
-                isExceprion500 = true;
+                moneyTransferService.transferHandler(moneyTransfer);
+            } catch (ExternalServiceException e) {
+                isExternalServiceException = true;
                 break;
             }
         }
 
         //assert
-        Assertions.assertTrue(isExceprion500);
+        Assertions.assertTrue(isExternalServiceException);
     }
 
     @Test
-    public void getResponseTestGoodResponse() {
+    public void transferHandler() {
         //arrange
 
         //Заглушки возвращают true на все методы
@@ -119,8 +118,8 @@ public class MoneyTransferServiceTest {
         GoodResponse goodResponse = null;
         for (int i = 0; i < 3; i++) {
             try {
-                goodResponse = moneyTransferService.getResponse(moneyTransfer);
-            } catch (Exception500 e) {
+                goodResponse = moneyTransferService.transferHandler(moneyTransfer);
+            } catch (ExternalServiceException e) {
                 continue;
             }
             if (goodResponse != null) break;

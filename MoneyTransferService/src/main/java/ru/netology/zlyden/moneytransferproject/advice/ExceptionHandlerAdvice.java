@@ -5,43 +5,41 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.netology.zlyden.moneytransferproject.exceptions.Exception400;
-import ru.netology.zlyden.moneytransferproject.exceptions.Exception500;
+import ru.netology.zlyden.moneytransferproject.exceptions.ParametersValidationException;
+import ru.netology.zlyden.moneytransferproject.exceptions.ExternalServiceException;
 import ru.netology.zlyden.moneytransferproject.models.BadResponse;
-import ru.netology.zlyden.moneytransferproject.services.MyLogger;
+import ru.netology.zlyden.moneytransferproject.services.MoneyTransferServiceLogger;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
-    private final MyLogger myLogger;
+    private final MoneyTransferServiceLogger moneyTransferServiceLogger;
 
     @Autowired
-    public ExceptionHandlerAdvice(MyLogger myLogger) {
-        this.myLogger = myLogger;
+    public ExceptionHandlerAdvice(MoneyTransferServiceLogger moneyTransferServiceLogger) {
+        this.moneyTransferServiceLogger = moneyTransferServiceLogger;
     }
 
-    //HttpStatus.BAD_REQUEST              400
-    @ExceptionHandler(Exception400.class)
-    public ResponseEntity<BadResponse> exception400Handler(Exception400 e) {
+    @ExceptionHandler(ParametersValidationException.class)
+    public ResponseEntity<BadResponse> exception400Handler(ParametersValidationException e) {
         BadResponse badResponse = new BadResponse(e.getMessage(), 2);
         StringBuilder sb = new StringBuilder();
         sb.append("RESPONSE: ");
         sb.append(HttpStatus.BAD_REQUEST.toString() + " ");
         sb.append(badResponse.toString());
-        myLogger.log(sb.toString());
+        moneyTransferServiceLogger.log(sb.toString());
         return new ResponseEntity<>(badResponse, HttpStatus.BAD_REQUEST);
-        //return new ResponseEntity<>(new BadResponse(e.getMessage(), 2), HttpStatus.BAD_REQUEST);
+
     }
 
-    //HttpStatus.INTERNAL_SERVER_ERROR    500
-    @ExceptionHandler(Exception500.class)
-    public ResponseEntity<BadResponse> exception500Handler(Exception500 e) {
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<BadResponse> exception500Handler(ExternalServiceException e) {
         BadResponse badResponse = new BadResponse(e.getMessage(), 1);
         StringBuilder sb = new StringBuilder();
         sb.append("RESPONSE: ");
         sb.append(HttpStatus.INTERNAL_SERVER_ERROR.toString() + " ");
         sb.append(badResponse.toString());
-        myLogger.log(sb.toString());
+        moneyTransferServiceLogger.log(sb.toString());
         return new ResponseEntity<>(badResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        //return new ResponseEntity<>(new BadResponse(e.getMessage(), 1), HttpStatus.INTERNAL_SERVER_ERROR);
+
     }
 }

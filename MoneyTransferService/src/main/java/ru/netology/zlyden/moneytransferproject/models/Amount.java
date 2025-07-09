@@ -2,7 +2,7 @@ package ru.netology.zlyden.moneytransferproject.models;
 
 public class Amount {
     private String currency;
-    //@Positive
+
     private int value;
 
     public Amount() {

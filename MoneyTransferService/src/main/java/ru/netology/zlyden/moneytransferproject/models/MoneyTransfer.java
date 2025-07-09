@@ -1,15 +1,15 @@
 package ru.netology.zlyden.moneytransferproject.models;
 
 public class MoneyTransfer {
-    //@Pattern(regexp = "\\d{16}")
+
     private String cardFromNumber;
-    //@Pattern(regexp = "\\d{16}")
+
     private String cardToNumber;
-    //@Pattern(regexp = "\\d{3}")
+
     private String cardFromCVV;
-    //@Pattern(regexp = "(0[1-9]|1[0-2])\\/[0-9]{2}")
+
     private String cardFromValidTill;
-    //@NotNull
+
     private Amount amount;
 
     public MoneyTransfer() {

@@ -13,21 +13,21 @@ import java.util.Random;
 @Service
 public class ConfirmOperationService {
     private final ConfirmOperationValidator confirmOperationValidator;
-    private final MyLogger myLogger;
+    private final MoneyTransferServiceLogger moneyTransferServiceLogger;
 
     @Autowired
-    public ConfirmOperationService(ConfirmOperationValidator confirmOperationValidator, MyLogger myLogger) {
+    public ConfirmOperationService(ConfirmOperationValidator confirmOperationValidator, MoneyTransferServiceLogger moneyTransferServiceLogger) {
         this.confirmOperationValidator = confirmOperationValidator;
-        this.myLogger = myLogger;
+        this.moneyTransferServiceLogger = moneyTransferServiceLogger;
     }
 
-    public GoodResponse getResponse(ConfirmOperation confirmOperation) {
+    public GoodResponse confirmOperationHandler(ConfirmOperation confirmOperation) {
         if (!confirmOperationValidator.checkConfirmCode(confirmOperation.getCode())){
-            throw new Exception400("Invalid confirmCode: " + confirmOperation.getCode());
+            throw new ParametersValidationException("Invalid confirmCode: " + confirmOperation.getCode());
         }
 
         if (!confirmOperationValidator.checkOperationId(confirmOperation.getOperationId())){
-            throw new Exception400("Invalid operationId: " + confirmOperation.getOperationId());
+            throw new ParametersValidationException("Invalid operationId: " + confirmOperation.getOperationId());
         }
 
         //имитация запроса к банку - с вероятностью 1:5 отказ/успех
@@ -35,7 +35,7 @@ public class ConfirmOperationService {
         int rnd = random.nextInt(0, 5);
         if (rnd == 0) {
             //отказ
-            throw new Exception500("Confirmation failed. operationId: " + confirmOperation.getOperationId());
+            throw new ExternalServiceException("Confirmation failed. operationId: " + confirmOperation.getOperationId());
         } else {
             //успех
             GoodResponse goodResponse = new GoodResponse(confirmOperation.getOperationId());
@@ -43,7 +43,7 @@ public class ConfirmOperationService {
             sb.append("RESPONSE: ");
             sb.append(HttpStatus.OK.toString() + " ");
             sb.append(goodResponse.toString());
-            myLogger.log(sb.toString());
+            moneyTransferServiceLogger.log(sb.toString());
             return goodResponse;
         }
     }

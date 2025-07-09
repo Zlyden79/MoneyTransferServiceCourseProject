@@ -1,12 +1,9 @@
 package ru.netology.zlyden.moneytransferproject.models;
 
 public class ConfirmOperation {
-    //@NotNull
-    //@NotEmpty
+
     private String operationId;
-    //@NotNull
-    //@NotEmpty
-    //@Size(min=4, max=6)
+
     private String code;
 
     public ConfirmOperation() {

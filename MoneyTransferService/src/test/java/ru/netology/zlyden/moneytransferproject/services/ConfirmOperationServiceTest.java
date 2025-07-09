@@ -7,15 +7,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import ru.netology.zlyden.moneytransferproject.exceptions.Exception400;
-import ru.netology.zlyden.moneytransferproject.exceptions.Exception500;
+import ru.netology.zlyden.moneytransferproject.exceptions.ParametersValidationException;
+import ru.netology.zlyden.moneytransferproject.exceptions.ExternalServiceException;
 import ru.netology.zlyden.moneytransferproject.models.ConfirmOperation;
 import ru.netology.zlyden.moneytransferproject.models.GoodResponse;
 import ru.netology.zlyden.moneytransferproject.validators.ConfirmOperationValidator;
 
 public class ConfirmOperationServiceTest {
     @Mock
-    MyLogger myLogger;
+    MoneyTransferServiceLogger moneyTransferServiceLogger;
     @Mock
     ConfirmOperationValidator ConfirmOperationValidator;
     @InjectMocks
@@ -29,7 +29,7 @@ public class ConfirmOperationServiceTest {
     }
 
     @Test
-    public void getResponseTestException400() {
+    public void confirmOperationHandlerTestException400() {
         //arrange
 
         //пусть заглушки возвращают false на оба метода (хотя достаточно одного false с любого метода)
@@ -39,13 +39,13 @@ public class ConfirmOperationServiceTest {
                 .thenReturn(false);
 
         //act + assert
-        Assertions.assertThrows(Exception400.class, () -> {
-            confirmOperationService.getResponse(confirmOperation);
+        Assertions.assertThrows(ParametersValidationException.class, () -> {
+            confirmOperationService.confirmOperationHandler(confirmOperation);
         });
     }
 
     @Test
-    public void getResponseTestException500() {
+    public void confirmOperationHandlerTestException500() {
         //arrange
 
         //заглушки возвращают true на оба метода
@@ -58,22 +58,22 @@ public class ConfirmOperationServiceTest {
         //логика метода с вероятностью 1:5 должна выбрасывать исключение,
         // поэтому за 10 вызовов скорее всего оно хоть один раз да выбросится
         //если выбросится раньше - выходим из цикла
-        boolean isExceprion500 = false;
+        boolean isExternalServiceException = false;
         for (int i = 0; i < 10; i++) {
             try {
-                confirmOperationService.getResponse(confirmOperation);
-            } catch (Exception500 e) {
-                isExceprion500 = true;
+                confirmOperationService.confirmOperationHandler(confirmOperation);
+            } catch (ExternalServiceException e) {
+                isExternalServiceException = true;
                 break;
             }
         }
 
         //assert
-        Assertions.assertTrue(isExceprion500);
+        Assertions.assertTrue(isExternalServiceException);
     }
 
     @Test
-    public void getResponseTestGoodResponse() {
+    public void confirmOperationHandler() {
         //arrange
 
         //заглушки возвращают true на оба метода
@@ -88,8 +88,8 @@ public class ConfirmOperationServiceTest {
         GoodResponse goodResponse = null;
         for (int i=0; i<3; i++){
             try {
-                goodResponse = confirmOperationService.getResponse(confirmOperation);
-            } catch (Exception500 e) {
+                goodResponse = confirmOperationService.confirmOperationHandler(confirmOperation);
+            } catch (ExternalServiceException e) {
                 continue;
             }
             if (goodResponse != null) break;
